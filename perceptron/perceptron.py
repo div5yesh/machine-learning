@@ -241,7 +241,7 @@ evals = {}
 def evalplot(models):
     for mod in models:
         errors = {}
-        for e in range(1,11):
+        for e in range(1,1):
             print("Iteration:", e)
             mod.fit(x=train_splitX, y=train_splitY, epoach=e)
             accuracy = mod.evaluate(x=dev_splitX, y=dev_splitY)
@@ -286,4 +286,14 @@ plt.xlabel("x_1")
 plt.ylabel("x_2")
 plt.plot([-4,4],[4,-4])
 
+#%% [markdown]
+#  ## Test Set Evaluation
+
 #%%
+baseline = frequent()
+baseline.fit(x=trainX, y=trainY)
+baseline.evaluate(x=testX, y=testY)
+
+bptrn = biasperceptron()
+bptrn.fit(x=trainX, y=trainY,epoach=10)
+bptrn.evaluate(x=testX, y=testY)
