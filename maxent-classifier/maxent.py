@@ -1,7 +1,7 @@
 #%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
 import os
 try:
-	os.chdir(os.path.join(os.getcwd(), 'perceptron'))
+	os.chdir(os.path.join(os.getcwd(), 'maxent-classifier'))
 	print(os.getcwd())
 except:
 	pass
@@ -79,13 +79,20 @@ clf.fit(train_splitX, train_splitY)
 clf.score(dev_splitX, dev_splitY)
 
 #%%
-dclf = DummyClassifier(strategy='most_frequent', random_state=0)
-dclf.fit(train_splitX, train_splitY)
-dclf.score(dev_splitX, dev_splitY)
+y_pred = clf.predict(dev_splitX)
+print(confusion_matrix(dev_splitY, y_pred))
+print(classification_report(dev_splitY, y_pred))
+
+#%%
+# dclf = DummyClassifier(strategy='most_frequent', random_state=0)
+# dclf.fit(train_splitX, train_splitY)
+# dclf.score(dev_splitX, dev_splitY)
 
 #%%
 feat_max = lambda arr : numpy.max(arr)
-feat_avg = lambda arr : 1 if numpy.sum(arr)/(len(arr) ** 2) >= 0.5 else 0
+# feat_avg = lambda arr : 1 if numpy.sum(arr)/(len(arr) ** 2) >= 0.5 else 0
+feat_avg = lambda arr : numpy.sum(arr)/(len(arr) ** 2)
+# feat_avg = lambda arr : numpy.sum(arr)
 
 def featurization(image, mask, fc="max"):
     func = feat_max
@@ -103,23 +110,69 @@ def featurization(image, mask, fc="max"):
 
 #%%
 temp = featurization(train_splitX[208].reshape((28,28)), 3, "avg")
-print(temp.shape)
 plt.imshow(temp, cmap='Greys')
 
 #%%
+# max featurization
 (m,n) = train_splitX.shape
-print(m,n)
-f1_train_X = numpy.zeros((m), dtype=object)
-print(f1_train_X.shape)
+f1_train_splitX = numpy.zeros((m, 27*27), dtype=object)
 for i in range(m):
     features = featurization(train_splitX[i].reshape((28,28)), 2, "max")
-    print(features.flatten().shape)
-    f1_train_X[i] = numpy.array(features.flatten())
+    f1_train_splitX[i, numpy.newaxis] = features.flatten()
 
-f2_train_X = numpy.zeros((m))
+(m,n) = dev_splitX.shape
+f1_dev_splitX = numpy.zeros((m,27*27), dtype=object)
+for i in range(m):
+    features = featurization(dev_splitX[i].reshape((28,28)), 2, "max")
+    f1_dev_splitX[i] = features.flatten()
+
+
+#%%
+print(train_splitX.shape, f1_train_splitX.shape)
+clf = LogisticRegression(random_state=0, solver='liblinear', multi_class="ovr", penalty="l2")
+clf.fit(f1_train_splitX, train_splitY)
+clf.score(f1_dev_splitX, dev_splitY)
+
+#%%
+y_pred = clf.predict(f1_dev_splitX)
+print(confusion_matrix(dev_splitY, y_pred))
+print(classification_report(dev_splitY, y_pred))
+
+
+#%%
+# average featurization
+(m,n) = train_splitX.shape
+f2_train_splitX = numpy.zeros((m, 26*26), dtype=object)
 for i in range(m):
     features = featurization(train_splitX[i].reshape((28,28)), 3, "avg")
-    f2_train_X[i] = features.flatten()
+    f2_train_splitX[i] = features.flatten()
 
+(m,n) = dev_splitX.shape
+f2_dev_splitX = numpy.zeros((m,26*26), dtype=object)
+for i in range(m):
+    features = featurization(dev_splitX[i].reshape((28,28)), 3, "avg")
+    f2_dev_splitX[i] = features.flatten()
+
+#%%
+print(train_splitX.shape, f2_train_splitX.shape)
+clf = LogisticRegression(random_state=0, solver='liblinear', multi_class="ovr", penalty="l2")
+clf.fit(f2_train_splitX, train_splitY)
+clf.score(f2_dev_splitX, dev_splitY)
+
+#%%
+y_pred = clf.predict(f2_dev_splitX)
+print(confusion_matrix(dev_splitY, y_pred))
+print(classification_report(dev_splitY, y_pred))
+
+#%%
+# test evaluation
+clf = LogisticRegression(random_state=0, solver='liblinear', multi_class="ovr", penalty="l1")
+clf.fit(trainX, trainY)
+clf.score(testX, testY)
+
+#%%
+y_pred = clf.predict(testX)
+print(confusion_matrix(testY, y_pred))
+print(classification_report(testY, y_pred))
 
 #%%
